@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Web Assembly</title>
+</head>
+<body>
+	<h2>Web Assembly</h2>
+	<b>Running a program written in C in the browser</b>
+<pre>
+    <strong>program.c</strong>
+
+	int add(int a, int b) { 
+	  return a + b;
+	}
+</pre>
+<hr>
+<pre>
+    <strong>program.wast</strong>
+
+	(module
+	  (table 0 anyfunc)
+	  (memory $0 1)
+	  (export "memory" (memory $0))
+	  (export "add" (func $add))
+	  (func $add (param $0 i32) (param $1 i32) (result i32)
+	    (i32.add
+	      (get_local $1)
+	      (get_local $0)
+	    )
+	  )
+	)
+</pre>
+<hr>
+<pre>
+    <strong>program.wasm</strong>
+
+	0061 736d 0100 0000 0187 8080 8000 0160
+	027f 7f01 7f03 8280 8080 0001 0004 8480
+	8080 0001 7000 0005 8380 8080 0001 0001
+	0681 8080 8000 0007 9080 8080 0002 066d
+	656d 6f72 7902 0003 6164 6400 000a 8d80
+	8080 0001 8780 8080 0000 2001 2000 6a0b
+</pre>
+<hr>
+<pre>
+    <strong>program.js</strong>
+
+	fetch('program.wasm')
+	.then( wasm => wasm.arrayBuffer())
+	.then( arrbuffer => {
+	  const wasmModule = new WebAssembly.Module(arrbuffer);
+	  const wasmInstance = new WebAssembly.Instance(wasmModule);
+	  const add = wasmInstance.exports.add;
+	  console.log(add(3, 2));
+	  document.getElementById('result').innerHTML = `${add(3,2)}`;
+	});
+</pre>
+<hr>
+<pre>
+    <strong>result: </strong><span id="result"></span>
+</pre>
+<hr>
+
+<script>
+    
+    // Fetch program.wasm file
+    const getWasm = (() => fetch('program.wasm'))(); // IFFE
+
+    // Imports ???
+    const wasmImports = {};
+    
+    // Instantiate
+    getWasm.then( wasm => wasm.arrayBuffer()) // read as arraybuffer
+    .then( arrbuffer => {
+    	const wasmModule = new WebAssembly.Module(arrbuffer);
+    	const wasmInstance = new WebAssembly.Instance(wasmModule, wasmImports);
+    	const add = wasmInstance.exports.add;
+	  	console.log(add(3, 2));
+	  	document.getElementById('result').innerHTML = `${add(3,2)}`;
+    });
+</script>
+</body>
+</html>
